@@ -1,0 +1,83 @@
+---
+output:
+  word_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(glmnet)
+library(GGally)
+library(car)
+library(lubridate)
+library(lmtest)
+```
+
+```{r}
+library(readr)
+bike_cleaned <- read.csv("bike_cleaned.csv")
+bike<- bike_cleaned
+
+bike = bike %>% mutate(dteday = mdy(dteday)) 
+```
+
+```{r}
+bike = bike %>% mutate(season = as_factor(season))
+bike = bike %>% mutate(mnth = as_factor(mnth))
+bike = bike %>% mutate(hr = as_factor(hr))
+bike = bike %>% mutate(holiday = as_factor(holiday))
+bike = bike %>% mutate(weekday = as_factor(weekday))
+bike = bike %>% mutate(workingday = as_factor(workingday))
+bike = bike %>% mutate(weathersit = as_factor(weathersit))
+
+### we converted the HR variable to a factor so that it can be analyzed against numeric data
+```
+
+```{r}
+ggpairs(bike)
+ggcorr(bike, label=TRUE)
+
+### atemp or temp appear to be the best correlated with count but they do not have a very strong correlation
+```
+
+```{r}
+ggplot(bike,aes(x=hr,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=season,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=mnth,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=holiday,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=weekday,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=workingday,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=weathersit,y=count)) + geom_boxplot() + theme_bw()
+
+###Hour could affect count because riders are not going to be as present very late at night or early in the morning.
+### Season could affect count because if its really hot or really cold there would probably not be as many riders
+###month could affect count because it aligns with weather and season which can promote more or less riding.
+###holiday would hardly affect count but still could due to riders spending non working days riding
+###weekday could affect count because there are probably more riders on the weekend due to less people working
+###workingday would affect count because if people are not working they have more time to be riding
+###Weathersit would affect count because if weather conditions are poor there will be less riders than when the weather is nice. 
+```
+
+```{r}
+bike2<- bike %>% dplyr::select("season","mnth","hr","holiday","weekday","workingday","weathersit","temp","atemp","hum","windspeed","count")
+```
+
+```{r}
+ridge_model 
+  linear_reg(mixture = 0 ) %>% 
+  set_engine("glmnet") 
+  
+  ridge_wflow = 
+  workflow() %>% 
+  add_model(ridge_model) %>% 
+  add_recipe(bike2)
+
+
+  
+  
+```
+
